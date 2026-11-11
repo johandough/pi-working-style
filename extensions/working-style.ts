@@ -68,8 +68,22 @@ export default function workingStyle(pi: ExtensionAPI) {
 				ctx.ui.notify(`Unknown working style "${name}". Use: ${Object.keys(STYLES).join(", ")}`, "error");
 				return;
 			}
+			if (name === active) {
+				ctx.ui.notify(`Working style is already ${active}`, "info");
+				return;
+			}
+			const previous = active;
 			active = name;
 			pi.appendEntry(ENTRY_TYPE, { name });
+			// A visible message marks the change in the history; a prompt section patch alone is easy to miss.
+			pi.sendMessage(
+				{
+					customType: ENTRY_TYPE,
+					content: `The user changed the working style from ${previous} to ${active}. Follow the ${active} rules from now on. Earlier messages used ${previous} rules. Do not copy their pattern. Begin your next reply with "Working style: ${active}."\n\n${STYLES[active]}`,
+					display: true,
+				},
+				{ deliverAs: "nextTurn" },
+			);
 			showStatus(ctx);
 			ctx.ui.notify(`Working style: ${active}`, "info");
 		},
@@ -77,6 +91,6 @@ export default function workingStyle(pi: ExtensionAPI) {
 
 	// Use a structured section so pi patches only this part and keeps the prompt cache.
 	pi.on("before_agent_start", async (event) => {
-		event.systemPromptOptions.sections.working_style = STYLES[active];
+		event.systemPromptOptions.sections.working_style = `This is the active working style. It overrides any earlier working style in this conversation.\n${STYLES[active]}`;
 	});
 }
