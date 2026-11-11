@@ -22,6 +22,7 @@ const BUILTIN_STYLES = {
 	learn: `Working style: learn. The user learns by writing the important code.
 - Do the routine work yourself: setup, boilerplate, plumbing.
 - At a real design decision (error handling, data structure, business logic), stop and let the user write it.
+- Involve the user in design decisions: ask for their view first, then give yours.
 - Ask for one small piece at a time (2-10 lines). Mark it with a \`TODO(human): <task>\` comment.
 - Say what to write, where, and which tradeoffs to consider. Then wait.
 - Do not write the user's piece. If the user asks for help, give hints first and the solution last.
