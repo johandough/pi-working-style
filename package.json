@@ -1,0 +1,11 @@
+{
+  "name": "pi-working-style",
+  "version": "0.1.0",
+  "description": "Switch how much the pi agent works alone: auto, pair, or learn.",
+  "keywords": ["pi-package", "pi", "extension"],
+  "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/johandough/pi-working-style.git" },
+  "pi": { "extensions": ["./extensions"] },
+  "peerDependencies": { "@earendil-works/pi-coding-agent": "*" },
+  "files": ["extensions", "README.md", "LICENSE"]
+}
