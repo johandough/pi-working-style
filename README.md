@@ -19,6 +19,17 @@ pi install git:github.com/johandough/pi-working-style
 - The default is `pair`. The footer shows `style: <name>`.
 - The selection is saved in the session. `/resume` and `/tree` keep it.
 
-## Customize
+## Custom styles
 
-To change the style texts, fork the repo and edit `STYLES` in `extensions/working-style.ts`.
+Add a Markdown file for each style to `~/.pi/agent/working-styles/`:
+
+```bash
+mkdir -p ~/.pi/agent/working-styles
+printf 'Working style: review.\n- Do not edit files. Read the code and report problems, ranked by risk.\n' \
+  > ~/.pi/agent/working-styles/review.md
+```
+
+- The file name is the style name: `/working-style review`.
+- Use only `a-z`, `0-9` and `-` in the name.
+- A file with a built-in name (`auto.md`, `pair.md`, `learn.md`) replaces that style. `/working-style` then shows `(custom)`.
+- Run `/reload` after you add or change a file.

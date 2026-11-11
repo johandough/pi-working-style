@@ -1,11 +1,13 @@
 /**
  * Working style: sets how much the agent works alone and how much it involves the user.
- * Usage: /working-style auto|pair|learn  (no argument shows the active style)
+ * Usage: /working-style auto|pair|learn|<custom>  (no argument shows the active style)
  */
-import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { join } from "node:path";
+import { type ExtensionAPI, type ExtensionContext, getAgentDir } from "@earendil-works/pi-coding-agent";
+import { loadStyles } from "../src/load-styles.ts";
 
-// Edit the style texts here. Run /reload after a change.
-const STYLES = {
+// Users add or replace styles with <agent-dir>/working-styles/<name>.md. Run /reload after a change.
+const BUILTIN_STYLES = {
 	auto: `Working style: auto.
 - Work through the full task without stopping for approval.
 - Make reasonable decisions and record them.
@@ -24,16 +26,18 @@ const STYLES = {
 - Say what to write, where, and which tradeoffs to consider. Then wait.
 - Do not write the user's piece. If the user asks for help, give hints first and the solution last.
 - Review the user's code. Give one short "Insight:" note about a choice, tradeoff, or codebase pattern.`,
-} as const;
+};
 
-type StyleName = keyof typeof STYLES;
-const DEFAULT_STYLE: StyleName = "pair";
+const DEFAULT_STYLE = "pair";
 const ENTRY_TYPE = "working-style";
 
-const isStyleName = (value: string): value is StyleName => value in STYLES;
-
 export default function workingStyle(pi: ExtensionAPI) {
-	let active: StyleName = DEFAULT_STYLE;
+	let STYLES: Record<string, string> = BUILTIN_STYLES;
+	let custom = new Set<string>();
+	let active = DEFAULT_STYLE;
+
+	const isStyleName = (value: string) => Object.hasOwn(STYLES, value);
+	const label = (name: string) => (custom.has(name) ? `${name} (custom)` : name);
 
 	const showStatus = (ctx: ExtensionContext) => ctx.ui.setStatus(ENTRY_TYPE, `style: ${active}`);
 
@@ -43,25 +47,35 @@ export default function workingStyle(pi: ExtensionAPI) {
 		for (const entry of ctx.sessionManager.getBranch()) {
 			if (entry.type !== "custom" || entry.customType !== ENTRY_TYPE) continue;
 			const name = (entry.data as { name?: unknown } | undefined)?.name;
-			if (typeof name === "string" && isStyleName(name)) active = name;
+			if (typeof name === "string") active = name;
+		}
+		if (!isStyleName(active)) {
+			ctx.ui.notify(`Working style "${active}" no longer exists. Using ${DEFAULT_STYLE}.`, "warning");
+			active = DEFAULT_STYLE;
 		}
 		showStatus(ctx);
 	};
-	pi.on("session_start", restore);
+	pi.on("session_start", (event, ctx) => {
+		const loaded = loadStyles(join(getAgentDir(), "working-styles"), BUILTIN_STYLES);
+		STYLES = loaded.styles;
+		custom = loaded.custom;
+		for (const warning of loaded.warnings) ctx.ui.notify(`working-style: ${warning}`, "warning");
+		restore(event, ctx);
+	});
 	pi.on("session_tree", restore);
 
 	pi.registerCommand("working-style", {
-		description: "Set the working style: auto | pair | learn",
+		description: "Set the working style: auto | pair | learn | <custom>",
 		getArgumentCompletions: (prefix: string) => {
 			const items = Object.keys(STYLES)
 				.filter((name) => name.startsWith(prefix))
-				.map((name) => ({ value: name, label: name }));
+				.map((name) => ({ value: name, label: label(name) }));
 			return items.length > 0 ? items : null;
 		},
 		handler: async (args, ctx) => {
 			const name = args.trim();
 			if (!name) {
-				ctx.ui.notify(`Working style: ${active}`, "info");
+				ctx.ui.notify(`Working style: ${label(active)}`, "info");
 				return;
 			}
 			if (!isStyleName(name)) {
