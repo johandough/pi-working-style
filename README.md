@@ -17,6 +17,7 @@ pi install git:github.com/johandough/pi-working-style
 - `/working-style auto|pair|learn` sets the style for the session.
 - `/working-style` shows the active style.
 - The default is `pair`. The footer shows `style: <name>`.
+- `PI_WORKING_STYLE=<name> pi` starts new sessions in another style, for example `auto` for agents that another agent starts.
 - The selection is saved in the session. `/resume` and `/tree` keep it.
 
 ## Custom styles
