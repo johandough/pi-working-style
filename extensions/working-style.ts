@@ -30,6 +30,8 @@ const BUILTIN_STYLES = {
 };
 
 const DEFAULT_STYLE = "pair";
+// Lets a launcher start sessions in another style, for example PI_WORKING_STYLE=auto for delegated agents.
+const START_STYLE = process.env.PI_WORKING_STYLE || DEFAULT_STYLE;
 const ENTRY_TYPE = "working-style";
 
 export default function workingStyle(pi: ExtensionAPI) {
@@ -44,7 +46,7 @@ export default function workingStyle(pi: ExtensionAPI) {
 
 	// Read the last selection on the current branch, so /resume and /tree restore the correct style.
 	const restore = (_event: unknown, ctx: ExtensionContext) => {
-		active = DEFAULT_STYLE;
+		active = START_STYLE;
 		for (const entry of ctx.sessionManager.getBranch()) {
 			if (entry.type !== "custom" || entry.customType !== ENTRY_TYPE) continue;
 			const name = (entry.data as { name?: unknown } | undefined)?.name;
